@@ -6,6 +6,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const userMessage = body.message;
+    const pdfText = body.pdf || "";
+
+    const finalPrompt = pdfText ? `${pdfText}\n\n${userMessage}` : userMessage;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GOOGLE_API_KEY}`,
@@ -15,7 +18,7 @@ export async function POST(req: NextRequest) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: userMessage }] }],
+          contents: [{ parts: [{ text: finalPrompt }] }],
         }),
       }
     );
@@ -23,11 +26,14 @@ export async function POST(req: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Gemini API error:", errorText);
-      return NextResponse.json({ error: "Gemini API error", details: errorText }, { status: 500 });
+      return NextResponse.json(
+        { error: "Gemini API error", details: errorText },
+        { status: 500 }
+      );
     }
 
     const result = await response.json();
-    const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
+    const aiResponse = result?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
 
     return NextResponse.json({ message: aiResponse });
   } catch (error) {

@@ -6,9 +6,9 @@ export default function Home() {
   const [messages, setMessages] = useState<{ role: string; text: string }[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [pdfText, setPdfText] = useState(""); // Parsed PDF content
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [pdfText, setPdfText] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -68,22 +68,17 @@ export default function Home() {
         parts: [{ text: pdfText ? `${pdfText}\n\n${input}` : input }],
       });
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ contents: conversation }),
-        }
-      );
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: input, pdf: pdfText }),
+      });
 
       const data = await response.json();
-
       const aiText =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text ??
-        "Something went wrong. Try again.";
+        data?.message ?? "Something went wrong. Try again.";
 
       setMessages((prev) => [...prev, { role: "model", text: aiText }]);
     } catch (error) {
@@ -104,7 +99,7 @@ export default function Home() {
           My Aichatbot
         </h1>
 
-        {/* Chat messages */}
+        {/* Chat Messages */}
         <div className="flex flex-col space-y-4 mb-6">
           {messages.map((msg, idx) => (
             <div
@@ -126,7 +121,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* Input + Send */}
+        {/* Input and Send */}
         <div className="flex gap-2">
           <input
             type="text"
@@ -144,7 +139,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* PDF Upload (moved to bottom) */}
+        {/* PDF Upload */}
         <div className="flex justify-between items-center">
           <input
             type="file"
