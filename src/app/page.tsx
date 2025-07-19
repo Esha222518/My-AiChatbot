@@ -58,25 +58,18 @@ export default function Home() {
     setIsTyping(true);
 
     try {
-      const conversation = messages.map((msg) => ({
-        role: msg.role,
-        parts: [{ text: msg.text }],
-      }));
-
-      conversation.push({
-        role: "user",
-        parts: [{ text: pdfText ? `${pdfText}\n\n${input}` : input }],
-      });
-
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: input, pdf: pdfText }),
+        body: JSON.stringify({
+          message: pdfText ? `${pdfText}\n\n${input}` : input,
+        }),
       });
 
       const data = await response.json();
+
       const aiText =
         data?.message ?? "Something went wrong. Try again.";
 
@@ -140,7 +133,7 @@ export default function Home() {
         </div>
 
         {/* PDF Upload */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mt-4">
           <input
             type="file"
             accept="application/pdf"
